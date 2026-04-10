@@ -281,20 +281,22 @@ def alert_html(level: str, text: str) -> str:
 
 
 def apply_chart_theme(fig, height=None):
-    layout = dict(
+    # Core layout styling
+    fig.update_layout(
         paper_bgcolor="white",
         plot_bgcolor="white",
         font=dict(color=THEME["charcoal"]),
         title=dict(x=0.01, xanchor="left", font=dict(size=14, color=THEME["black"])),
-        margin=dict(t=30, b=25, l=15, r=15),
+        margin=dict(t=40, b=40, l=50, r=20),
         legend=dict(bgcolor="rgba(255,255,255,0.88)", bordercolor=THEME["border"],
                     borderwidth=1, font=dict(size=11)),
         hoverlabel=dict(bgcolor="white", bordercolor=THEME["border"],
                         font=dict(color=THEME["charcoal"])),
     )
     if height is not None:
-        layout["height"] = height
-    fig.update_layout(**layout)
+        fig.update_layout(height=height)
+    
+    # Axis styling - using update_xaxes/yaxes to set style without affecting titles
     fig.update_xaxes(showgrid=False, zeroline=False, linecolor=THEME["border"],
                      showline=True, tickfont=dict(size=11))
     fig.update_yaxes(showgrid=True, gridcolor=THEME["grid"], zeroline=False,
@@ -692,8 +694,8 @@ with tab2:
     st.subheader("Financial Performance")
 
     # ── Relative stock performance ────────────────────────────────────────────
-    # FIX: force Close to numeric and drop NaN before indexing
     st.markdown("#### Relative Stock Price Performance - 5 Years (Indexed to 100)")
+
     fig_px = go.Figure()
     for bank, hist in stock_hist.items():
         if hist.empty:
@@ -707,13 +709,16 @@ with tab2:
             name=bank, line=dict(color=COLORS[bank], width=2),
         ))
     fig_px.add_hline(y=100, line_dash="dash", line_color=THEME["border"], opacity=0.9)
-    fig_px.update_layout(yaxis_title="Indexed Price (Base = 100)",
-                         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
     apply_chart_theme(fig_px, height=380)
+    fig_px.update_layout(
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        xaxis_title="Date",
+        yaxis_title="Indexed Price (Base = 100)",
+        title=""
+    )
     st.plotly_chart(fig_px, width='stretch')
 
     # ── Revenue & Net Income ──────────────────────────────────────────────────
-    # FIX: use _find_col with broader keyword list; guard empty clean_vals
     st.markdown("#### DBS Annual Revenue & Net Income - with 3-Year Linear Forecast")
     if not dbs_inc.empty:
         rev_col = _find_col(dbs_inc, ["Total Revenue", "revenue", "Revenue"])
@@ -752,8 +757,15 @@ with tab2:
                     mode="lines+markers", marker=dict(symbol="circle-open"),
                 ), row=1, col=col_idx)
 
-        fig_fin.update_layout(legend=dict(orientation="h", y=-0.15))
         apply_chart_theme(fig_fin, height=400)
+        fig_fin.update_layout(
+            legend=dict(orientation="h", y=-0.2),
+            title=""
+        )
+        fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=1)
+        fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=2)
+        fig_fin.update_xaxes(title_text="Fiscal Year", row=1, col=1)
+        fig_fin.update_xaxes(title_text="Fiscal Year", row=1, col=2)
         st.plotly_chart(fig_fin, width='stretch')
     else:
         st.info("Annual income statement data could not be retrieved from yfinance for D05.SI. Try refreshing.")
@@ -986,15 +998,19 @@ with tab4:
 
     with col_r:
         if not gd_df.empty:
-            # FIX: explicitly cast recommend_pct to numeric before plotting
-            st.markdown("**Would Recommend to a Friend (%)**")
             rec_df = gd_df[["bank", "recommend_pct"]].copy()
             rec_df["recommend_pct"] = pd.to_numeric(rec_df["recommend_pct"], errors="coerce")
             fig = px.bar(rec_df, x="bank", y="recommend_pct",
                          color="bank", color_discrete_map=COLORS, text="recommend_pct")
             fig.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-            fig.update_layout(showlegend=False, yaxis_range=[0, 100], yaxis_title="%")
             apply_chart_theme(fig, height=230)
+            fig.update_layout(
+                showlegend=False,
+                yaxis_range=[0, 100],
+                yaxis_title="Percent (%)",
+                xaxis_title="Bank",
+                title="Would Recommend to a Friend(%)"
+            )
             st.plotly_chart(fig, width='stretch')
 
             st.markdown("**Ratings Summary**")
