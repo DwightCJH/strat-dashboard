@@ -973,70 +973,61 @@ with tab3:
 
     # ── Attrition ─────────────────────────────────────────────────────────────
     st.markdown("### Voluntary Attrition")
-    col_l, col_r = st.columns(2)
 
-    with col_l:
-        att   = hr.dropna(subset=["voluntary_attrition_pct"])
-        ayrs  = att["year"].tolist()
-        avals = att["voluntary_attrition_pct"].tolist()
-        fy_a, fv_a = linear_forecast(ayrs, avals, 3)
+    att   = hr.dropna(subset=["voluntary_attrition_pct"])
+    ayrs  = att["year"].tolist()
+    avals = att["voluntary_attrition_pct"].tolist()
+    fy_a, fv_a = linear_forecast(ayrs, avals, 3)
 
-        fig = go.Figure()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=ayrs, y=avals, name="Actual",
+        line=dict(color=COLORS["DBS"], width=2.5),
+        mode="lines+markers",
+        fill="tozeroy", fillcolor="rgba(200,16,46,0.08)",
+    ))
+    if fy_a:
         fig.add_trace(go.Scatter(
-            x=ayrs, y=avals, name="Actual",
-            line=dict(color=COLORS["DBS"], width=2.5),
-            mode="lines+markers",
-            fill="tozeroy", fillcolor="rgba(200,16,46,0.08)",
+            x=[ayrs[-1]] + fy_a, y=[avals[-1]] + fv_a,
+            name="Forecast",
+            line=dict(color=COLORS["DBS"], dash="dash", width=1.5),
+            mode="lines+markers", marker=dict(symbol="circle-open"),
         ))
-        if fy_a:
-            fig.add_trace(go.Scatter(
-                x=[ayrs[-1]] + fy_a, y=[avals[-1]] + fv_a,
-                name="Forecast",
-                line=dict(color=COLORS["DBS"], dash="dash", width=1.5),
-                mode="lines+markers", marker=dict(symbol="circle-open"),
-            ))
-        fig.add_hline(y=10, line_dash="dot", line_color=THEME["charcoal"],
-                      annotation_text="10% alert threshold")
-        fig.update_layout(
-            title="Voluntary Attrition Rate (%) + Forecast",
-            yaxis_title="Attrition Rate (%)",
-        )
-        apply_chart_theme(fig, height=340)
-        st.plotly_chart(fig, width='stretch')
+    fig.add_hline(y=10, line_dash="dot", line_color=THEME["charcoal"],
+                  annotation_text="10% alert threshold")
+    fig.update_layout(
+        title="Voluntary Attrition Rate (%) + Forecast",
+        yaxis_title="Attrition Rate (%)",
+    )
+    apply_chart_theme(fig, height=340)
+    st.plotly_chart(fig, width='stretch')
 
-    with col_r:
-        st.markdown("**LAMP Logic: Why Attrition Matters**")
-        latest_att = att["voluntary_attrition_pct"].iloc[-1]
-        prev_att   = att["voluntary_attrition_pct"].iloc[-2]
-        st.metric(
-            "Latest Voluntary Attrition",
-            f"{latest_att}%",
-            delta=f"{latest_att - prev_att:+.1f}pp vs prior year",
-            delta_color="inverse",
-        )
+    latest_att = att["voluntary_attrition_pct"].iloc[-1]
+    prev_att   = att["voluntary_attrition_pct"].iloc[-2]
+    st.metric(
+        "Latest Voluntary Attrition",
+        f"{latest_att}%",
+        delta=f"{latest_att - prev_att:+.1f}pp vs prior year",
+        delta_color="inverse",
+    )
 
     # ── Training ──────────────────────────────────────────────────────────────
     st.markdown("### Training and Development")
-    col_l, col_r = st.columns(2)
 
-    with col_l:
-        tr = hr.dropna(subset=["training_hrs_per_employee"])
-        fig = px.bar(
-            tr, x="year", y="training_hrs_per_employee",
-            title="Avg Training Hours per Employee",
-            color_discrete_sequence=[COLORS["DBS"]],
-            text="training_hrs_per_employee",
-        )
-        fig.update_traces(texttemplate="%{text:.1f}h", textposition="outside")
-        fig.update_layout(
-            showlegend=False,
-            yaxis_range=[0, 50], yaxis_title="Hours",
-        )
-        apply_chart_theme(fig, height=320)
-        st.plotly_chart(fig, width='stretch')
-
-    with col_r:
-        st.markdown("**LAMP Analytics: Training ROI**")
+    tr = hr.dropna(subset=["training_hrs_per_employee"])
+    fig = px.bar(
+        tr, x="year", y="training_hrs_per_employee",
+        title="Avg Training Hours per Employee",
+        color_discrete_sequence=[COLORS["DBS"]],
+        text="training_hrs_per_employee",
+    )
+    fig.update_traces(texttemplate="%{text:.1f}h", textposition="outside")
+    fig.update_layout(
+        showlegend=False,
+        yaxis_range=[0, 50], yaxis_title="Hours",
+    )
+    apply_chart_theme(fig, height=320)
+    st.plotly_chart(fig, width='stretch')
 
     # ── Engagement ────────────────────────────────────────────────────────────
     st.markdown("### Employee Engagement")
@@ -1336,6 +1327,34 @@ with tab5:
         fig_nim.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
         apply_chart_theme(fig_nim, height=320)
         st.plotly_chart(fig_nim, width='stretch')
+
+        st.divider()
+
+        fig_cost = px.bar(
+            sgx_df, x="bank", y="cost_to_income_pct",
+            color="bank", color_discrete_map=COLORS,
+            title="Cost-to-Income Ratio - FY2024",
+            labels={"cost_to_income_pct": "Cost-to-Income (%)", "bank": ""},
+            text="cost_to_income_pct",
+            barmode="group"
+        )
+        fig_cost.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
+        apply_chart_theme(fig_cost, height=320)
+        st.plotly_chart(fig_cost, width='stretch')
+
+        st.divider()
+
+        fig_npl = px.bar(
+            sgx_df, x="bank", y="npl_ratio_pct",
+            color="bank", color_discrete_map=COLORS,
+            title="Non-Performing Loan Ratio - FY2024",
+            labels={"npl_ratio_pct": "NPL Ratio (%)", "bank": ""},
+            text="npl_ratio_pct",
+            barmode="group"
+        )
+        fig_npl.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
+        apply_chart_theme(fig_npl, height=320)
+        st.plotly_chart(fig_npl, width='stretch')
 
 
 # ── NARRATIVE CONTENT (removed from dashboard, use in report/user guide) ──
