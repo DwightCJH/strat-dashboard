@@ -91,32 +91,6 @@ st.markdown(
         margin: 0;
         font-weight: 700;
     }}
-    .dashboard-meta {{
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.5rem;
-        margin-top: 0.6rem;
-    }}
-    .dashboard-meta-card {{
-        border: 1px solid {THEME["border"]};
-        border-left: 3px solid {THEME["dbs_red"]};
-        background: {THEME["surface_alt"]};
-        padding: 0.4rem 0.6rem;
-        border-radius: 4px;
-    }}
-    .dashboard-meta-label {{
-        color: {THEME["slate"]};
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.1rem;
-        font-weight: 700;
-    }}
-    .dashboard-meta-value {{
-        color: {THEME["black"]};
-        font-size: 0.8rem;
-        font-weight: 600;
-    }}
     .stTabs [data-baseweb="tab-list"] {{
         gap: 0.3rem;
         padding: 0 0 0.4rem;
@@ -233,11 +207,6 @@ st.markdown(
     hr {{
         margin-top: 0.75rem !important;
         margin-bottom: 0.75rem !important;
-    }}
-    @media (max-width: 900px) {{
-        .dashboard-meta {{
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }}
     }}
     </style>
     """,
@@ -421,24 +390,6 @@ st.markdown(
     <div class="dashboard-hero">
         <div class="eyebrow">DBS Bank Internal Dashboard</div>
         <h1>Strategic and HR Analytics Dashboard</h1>
-        <div class="dashboard-meta">
-            <div class="dashboard-meta-card">
-                <div class="dashboard-meta-label">Last Refresh</div>
-                <div class="dashboard-meta-value">{datetime.today().strftime('%d %B %Y')}</div>
-            </div>
-            <div class="dashboard-meta-card">
-                <div class="dashboard-meta-label">Financial Source</div>
-                <div class="dashboard-meta-value">yfinance</div>
-            </div>
-            <div class="dashboard-meta-card">
-                <div class="dashboard-meta-label">HR Source</div>
-                <div class="dashboard-meta-value">DBS Sustainability Reports</div>
-            </div>
-            <div class="dashboard-meta-card">
-                <div class="dashboard-meta-label">Workforce Source</div>
-                <div class="dashboard-meta-value">MOM</div>
-            </div>
-        </div>
     </div>
     """,
     unsafe_allow_html=True,
