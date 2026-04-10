@@ -29,18 +29,19 @@ st.set_page_config(
 # GLOBAL CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
 TICKERS = {"DBS": "D05.SI", "OCBC": "O39.SI", "UOB": "U11.SI"}
-COLORS  = {"DBS": "#c8102e", "OCBC": "#1f1f1f", "UOB": "#8a8f98"}
+COLORS  = {"DBS": "#c8102e", "OCBC": "#1a1a1a", "UOB": "#003d7c"}
 THEME = {
     "dbs_red": "#c8102e",
+    "dbs_red_light": "#fff1f3",
     "dbs_red_dark": "#970f24",
     "black": "#111111",
-    "charcoal": "#1f1f1f",
-    "slate": "#5f6368",
-    "border": "#d7d9dd",
+    "charcoal": "#1a1a1a",
+    "slate": "#4a5568",
+    "border": "#e2e8f0",
     "surface": "#ffffff",
-    "surface_alt": "#f6f7f8",
-    "grid": "#e5e7eb",
-    "header_line": "#b60d28",
+    "surface_alt": "#f8fafc",
+    "grid": "#f1f5f9",
+    "shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
 }
 
 # MOM Financial & Insurance Services resignation rates (annual, %)
@@ -59,154 +60,168 @@ MOM_RESIGNATION = {
 st.markdown(
     f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    html, body, [data-testid="stAppViewContainer"] {{
+        font-family: 'Inter', sans-serif;
+    }}
     .stApp {{
         background: {THEME["surface_alt"]};
         color: {THEME["black"]};
     }}
     .block-container {{
-        padding-top: 0.5rem;
-        padding-bottom: 1rem;
-        max-width: 1360px;
+        padding: 1.5rem 2rem;
+        max-width: 1400px;
     }}
     .dashboard-hero {{
         background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        border-top: 3px solid {THEME["header_line"]};
-        border-radius: 4px;
-        padding: 0.75rem 1rem 0.6rem;
+        border-bottom: 5px solid {THEME["dbs_red"]};
+        border-radius: 8px;
+        padding: 1.5rem 2rem;
         color: {THEME["black"]};
-        margin-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: {THEME["shadow"]};
     }}
     .dashboard-hero .eyebrow {{
         color: {THEME["dbs_red"]};
-        font-size: 0.68rem;
-        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.5rem;
         font-weight: 700;
     }}
     .dashboard-hero h1 {{
-        font-size: 1.5rem;
-        line-height: 1.1;
+        font-size: 2rem;
+        line-height: 1.2;
         margin: 0;
         font-weight: 700;
+        letter-spacing: -0.02em;
     }}
     .stTabs [data-baseweb="tab-list"] {{
-        gap: 0.3rem;
-        padding: 0 0 0.4rem;
+        gap: 0.5rem;
+        padding: 0 0 1rem;
+        background-color: transparent;
     }}
     .stTabs [data-baseweb="tab"] {{
         background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        border-radius: 4px 4px 0 0;
+        border-radius: 6px;
         color: {THEME["charcoal"]};
         font-weight: 600;
-        padding: 0.35rem 0.7rem 0.4rem;
-        min-height: 0;
-        font-size: 0.85rem;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
     }}
     .stTabs [aria-selected="true"] {{
         background: {THEME["dbs_red"]};
-        color: #ffffff;
+        color: #ffffff !important;
         border-color: {THEME["dbs_red"]};
+        box-shadow: 0 4px 6px -1px rgba(200, 16, 46, 0.2);
     }}
     div[data-testid="stMetric"] {{
         background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        border-top: 3px solid {THEME["dbs_red"]};
-        border-radius: 4px;
-        padding: 0.5rem 0.7rem 0.4rem;
-        min-height: 80px;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: {THEME["shadow"]};
     }}
     [data-testid="stMetricLabel"] {{
         color: {THEME["slate"]};
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
-        font-size: 0.65rem;
+        letter-spacing: 0.05em;
+        font-size: 0.7rem;
     }}
     [data-testid="stMetricValue"] {{
-        font-size: 1.25rem;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: {THEME["black"]};
+        letter-spacing: -0.02em;
     }}
     [data-testid="stMetricDelta"] {{
-        font-size: 0.75rem;
+        font-weight: 600;
     }}
     div[data-testid="stDataFrame"],
     div[data-testid="stPlotlyChart"],
     div[data-testid="stExpander"] {{
         background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        border-radius: 4px;
+        border-radius: 8px;
+        box-shadow: {THEME["shadow"]};
     }}
     div[data-testid="stExpander"] {{
         overflow: hidden;
+        border: 1px solid {THEME["border"]};
     }}
     div[data-testid="stExpander"] details summary {{
         background: {THEME["surface"]};
         font-weight: 600;
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
+        padding: 0.75rem 1rem;
+        color: {THEME["black"]};
     }}
     .stAlert {{
-        border-radius: 4px;
+        border-radius: 8px;
         border: 1px solid {THEME["border"]};
-        padding: 0.5rem 0.75rem;
     }}
     .alert-box {{
-        padding: 0.5rem 0.75rem;
-        border-radius: 4px;
-        margin-bottom: 0.4rem;
-        font-size: 0.85rem;
-        border-left: 4px solid;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        border-left: 5px solid;
         background: {THEME["surface"]};
+        box-shadow: {THEME["shadow"]};
     }}
     .alert-green {{
-        border-color: #2d8a4f;
-        background: #eef8f1;
-        color: #1f5130;
+        border-color: #10b981;
+        background: #f0fdf4;
+        color: #064e3b;
     }}
     .alert-red {{
         border-color: {THEME["dbs_red"]};
-        background: #fff1f3;
-        color: #7d1526;
+        background: {THEME["dbs_red_light"]};
+        color: #7f1d1d;
     }}
     .alert-amber {{
-        border-color: #b7791f;
-        background: #fff7e8;
-        color: #7a5312;
+        border-color: #f59e0b;
+        background: #fffbeb;
+        color: #78350f;
     }}
     .brief-card {{
         background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        border-left: 3px solid {THEME["dbs_red"]};
-        border-radius: 4px;
-        padding: 0.6rem 0.8rem;
-        min-height: 120px;
-        margin-bottom: 0.5rem;
+        border-left: 5px solid {THEME["dbs_red"]};
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        box-shadow: {THEME["shadow"]};
+        height: 100%;
     }}
     .brief-card .label {{
-        color: {THEME["slate"]};
-        font-size: 0.65rem;
+        color: {THEME["dbs_red"]};
+        font-size: 0.7rem;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 0.25rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
         font-weight: 700;
     }}
     .brief-card h4 {{
-        margin: 0 0 0.25rem;
-        font-size: 0.9rem;
-        line-height: 1.2;
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: {THEME["black"]};
     }}
     .brief-card p {{
         margin: 0;
-        color: {THEME["charcoal"]};
-        font-size: 0.82rem;
-        line-height: 1.3;
+        color: {THEME["slate"]};
+        font-size: 0.875rem;
+        line-height: 1.5;
     }}
     hr {{
-        margin-top: 0.75rem !important;
-        margin-bottom: 0.75rem !important;
+        margin: 2rem 0 !important;
+        border: 0;
+        border-top: 1px solid {THEME["border"]};
     }}
     </style>
     """,
@@ -254,22 +269,50 @@ def apply_chart_theme(fig, height=None):
     fig.update_layout(
         paper_bgcolor="white",
         plot_bgcolor="white",
-        font=dict(color=THEME["charcoal"]),
-        title=dict(x=0.01, xanchor="left", font=dict(size=14, color=THEME["black"])),
-        margin=dict(t=40, b=40, l=50, r=20),
-        legend=dict(bgcolor="rgba(255,255,255,0.88)", bordercolor=THEME["border"],
-                    borderwidth=1, font=dict(size=11)),
-        hoverlabel=dict(bgcolor="white", bordercolor=THEME["border"],
-                        font=dict(color=THEME["charcoal"])),
+        font=dict(family="'Inter', sans-serif", color=THEME["slate"]),
+        title=dict(
+            x=0, 
+            xanchor="left", 
+            font=dict(size=16, color=THEME["black"], weight="bold")
+        ),
+        margin=dict(t=60, b=60, l=60, r=40),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.9)", 
+            bordercolor=THEME["border"],
+            borderwidth=1, 
+            font=dict(size=11),
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            x=0
+        ),
+        hoverlabel=dict(
+            bgcolor="white", 
+            bordercolor=THEME["border"],
+            font=dict(family="'Inter', sans-serif", color=THEME["black"])
+        ),
     )
     if height is not None:
         fig.update_layout(height=height)
     
-    # Axis styling - using update_xaxes/yaxes to set style without affecting titles
-    fig.update_xaxes(showgrid=False, zeroline=False, linecolor=THEME["border"],
-                     showline=True, tickfont=dict(size=11))
-    fig.update_yaxes(showgrid=True, gridcolor=THEME["grid"], zeroline=False,
-                     linecolor=THEME["border"], showline=True, tickfont=dict(size=11))
+    # Axis styling
+    fig.update_xaxes(
+        showgrid=False, 
+        zeroline=False, 
+        linecolor=THEME["border"],
+        showline=True, 
+        tickfont=dict(size=11),
+        title_font=dict(size=12, color=THEME["slate"])
+    )
+    fig.update_yaxes(
+        showgrid=True, 
+        gridcolor=THEME["grid"], 
+        zeroline=False,
+        linecolor=THEME["border"], 
+        showline=True, 
+        tickfont=dict(size=11),
+        title_font=dict(size=12, color=THEME["slate"])
+    )
     return fig
 
 
