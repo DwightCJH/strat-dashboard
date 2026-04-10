@@ -355,33 +355,56 @@ def _find_col(df: pd.DataFrame, keywords: list):
 # ─────────────────────────────────────────────────────────────────────────────
 # DATA LOADERS
 # ─────────────────────────────────────────────────────────────────────────────
-@st.cache_data(ttl=3_600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def load_stock_history() -> dict:
     out = {}
     for name, ticker in TICKERS.items():
         try:
-            df = yf.Ticker(ticker).history(period="5y")[["Close", "Volume"]]
-            df.index       = df.index.tz_localize(None)
-            df["Close"]    = pd.to_numeric(df["Close"], errors="coerce")
-            df             = df.dropna(subset=["Close"])
-            out[name]      = df
-        except Exception:
+            t = yf.Ticker(ticker)
+            # Fetch history with explicit period to avoid API defaults
+            df = t.history(period="5y")
+            if df.empty:
+                # Fallback: try different period if 5y is too large/rate-limited
+                df = t.history(period="2y")
+            
+            if not df.empty:
+                df.index = df.index.tz_localize(None)
+                if "Close" in df.columns:
+                    df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
+                    df = df.dropna(subset=["Close"])
+                out[name] = df
+            else:
+                out[name] = pd.DataFrame()
+        except Exception as e:
+            st.error(f"Error loading stock data for {name}: {e}")
             out[name] = pd.DataFrame()
     return out
 
 
-@st.cache_data(ttl=3_600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def load_financials() -> dict:
     data = {}
     for name, ticker in TICKERS.items():
         try:
-            t   = yf.Ticker(ticker)
+            t = yf.Ticker(ticker)
+            # Financials and Balance Sheet are often the most rate-limited
             fin = t.financials.T.copy()
-            fin.index = pd.to_datetime(fin.index).year
-            bs  = t.balance_sheet.T.copy()
-            bs.index  = pd.to_datetime(bs.index).year
-            data[name] = {"income": fin, "balance": bs, "info": t.info}
+            if not fin.empty:
+                fin.index = pd.to_datetime(fin.index).year
+            
+            bs = t.balance_sheet.T.copy()
+            if not bs.empty:
+                bs.index = pd.to_datetime(bs.index).year
+            
+            info = t.info if t.info else {}
+            
+            # Additional check: if info is empty, try to get some basic stats
+            if not info:
+                info = {"symbol": ticker, "shortName": name}
+
+            data[name] = {"income": fin, "balance": bs, "info": info}
         except Exception:
+            # Silence the error to prevent UI clutter, but return empty structures
             data[name] = {"income": pd.DataFrame(), "balance": pd.DataFrame(), "info": {}}
     return data
 
