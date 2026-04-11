@@ -6,15 +6,15 @@ BEM3063 Assessment 2
 import warnings
 warnings.filterwarnings("ignore")
 
+import time
 import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -44,8 +44,6 @@ THEME = {
     "shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
 }
 
-# MOM Financial & Insurance Services resignation rates (annual, %)
-# Source: Ministry of Manpower, Labour Turnover Statistics
 MOM_RESIGNATION = {
     2020: 10.2,
     2021: 12.8,
@@ -61,168 +59,73 @@ st.markdown(
     f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-    html, body, [data-testid="stAppViewContainer"] {{
-        font-family: 'Inter', sans-serif;
-    }}
-    .stApp {{
-        background: {THEME["surface_alt"]};
-        color: {THEME["black"]};
-    }}
-    .block-container {{
-        padding: 1.5rem 2rem;
-        max-width: 1400px;
-    }}
+    html, body, [data-testid="stAppViewContainer"] {{ font-family: 'Inter', sans-serif; }}
+    .stApp {{ background: {THEME["surface_alt"]}; color: {THEME["black"]}; }}
+    .block-container {{ padding: 1.5rem 2rem; max-width: 1400px; }}
     .dashboard-hero {{
-        background: {THEME["surface"]};
-        border: 1px solid {THEME["border"]};
-        border-bottom: 5px solid {THEME["dbs_red"]};
-        border-radius: 8px;
-        padding: 1.5rem 2rem;
-        color: {THEME["black"]};
-        margin-bottom: 1.5rem;
+        background: {THEME["surface"]}; border: 1px solid {THEME["border"]};
+        border-bottom: 5px solid {THEME["dbs_red"]}; border-radius: 8px;
+        padding: 1.5rem 2rem; color: {THEME["black"]}; margin-bottom: 1.5rem;
         box-shadow: {THEME["shadow"]};
     }}
     .dashboard-hero .eyebrow {{
-        color: {THEME["dbs_red"]};
-        font-size: 0.75rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
+        color: {THEME["dbs_red"]}; font-size: 0.75rem; letter-spacing: 0.1em;
+        text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700;
     }}
     .dashboard-hero h1 {{
-        font-size: 2rem;
-        line-height: 1.2;
-        margin: 0;
-        font-weight: 700;
-        letter-spacing: -0.02em;
+        font-size: 2rem; line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.02em;
     }}
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 0.5rem;
-        padding: 0 0 1rem;
-        background-color: transparent;
-    }}
+    .stTabs [data-baseweb="tab-list"] {{ gap: 0.5rem; padding: 0 0 1rem; background-color: transparent; }}
     .stTabs [data-baseweb="tab"] {{
-        background: {THEME["surface"]};
-        border: 1px solid {THEME["border"]};
-        border-radius: 6px;
-        color: {THEME["charcoal"]};
-        font-weight: 600;
-        padding: 0.5rem 1.25rem;
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
+        background: {THEME["surface"]}; border: 1px solid {THEME["border"]}; border-radius: 6px;
+        color: {THEME["charcoal"]}; font-weight: 600; padding: 0.5rem 1.25rem; font-size: 0.9rem;
     }}
     .stTabs [aria-selected="true"] {{
-        background: {THEME["dbs_red"]};
-        color: #ffffff !important;
-        border-color: {THEME["dbs_red"]};
+        background: {THEME["dbs_red"]}; color: #ffffff !important; border-color: {THEME["dbs_red"]};
         box-shadow: 0 4px 6px -1px rgba(200, 16, 46, 0.2);
     }}
     div[data-testid="stMetric"] {{
-        background: {THEME["surface"]};
-        border: 1px solid {THEME["border"]};
-        border-radius: 8px;
-        padding: 1rem;
-        box-shadow: {THEME["shadow"]};
+        background: {THEME["surface"]}; border: 1px solid {THEME["border"]};
+        border-radius: 8px; padding: 1rem; box-shadow: {THEME["shadow"]};
     }}
     [data-testid="stMetricLabel"] {{
-        color: {THEME["slate"]};
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-size: 0.7rem;
+        color: {THEME["slate"]}; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.05em; font-size: 0.7rem;
     }}
     [data-testid="stMetricValue"] {{
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: {THEME["black"]};
-        letter-spacing: -0.02em;
+        font-size: 1.75rem; font-weight: 700; color: {THEME["black"]}; letter-spacing: -0.02em;
     }}
-    [data-testid="stMetricDelta"] {{
-        font-weight: 600;
-    }}
+    [data-testid="stMetricDelta"] {{ font-weight: 600; }}
     div[data-testid="stDataFrame"],
     div[data-testid="stPlotlyChart"],
     div[data-testid="stExpander"] {{
-        background: {THEME["surface"]};
-        border: 1px solid {THEME["border"]};
-        border-radius: 8px;
-        box-shadow: {THEME["shadow"]};
+        background: {THEME["surface"]}; border: 1px solid {THEME["border"]};
+        border-radius: 8px; box-shadow: {THEME["shadow"]};
     }}
-    div[data-testid="stExpander"] {{
-        overflow: hidden;
-        border: 1px solid {THEME["border"]};
-    }}
+    div[data-testid="stExpander"] {{ overflow: hidden; border: 1px solid {THEME["border"]}; }}
     div[data-testid="stExpander"] details summary {{
-        background: {THEME["surface"]};
-        font-weight: 600;
-        padding: 0.75rem 1rem;
-        color: {THEME["black"]};
+        background: {THEME["surface"]}; font-weight: 600; padding: 0.75rem 1rem; color: {THEME["black"]};
     }}
-    .stAlert {{
-        border-radius: 8px;
-        border: 1px solid {THEME["border"]};
-    }}
+    .stAlert {{ border-radius: 8px; border: 1px solid {THEME["border"]}; }}
     .alert-box {{
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-        font-size: 0.9rem;
-        border-left: 5px solid;
-        background: {THEME["surface"]};
-        box-shadow: {THEME["shadow"]};
+        padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.9rem;
+        border-left: 5px solid; background: {THEME["surface"]}; box-shadow: {THEME["shadow"]};
     }}
-    .alert-green {{
-        border-color: #10b981;
-        background: #f0fdf4;
-        color: #064e3b;
-    }}
-    .alert-red {{
-        border-color: {THEME["dbs_red"]};
-        background: {THEME["dbs_red_light"]};
-        color: #7f1d1d;
-    }}
-    .alert-amber {{
-        border-color: #f59e0b;
-        background: #fffbeb;
-        color: #78350f;
-    }}
+    .alert-green {{ border-color: #10b981; background: #f0fdf4; color: #064e3b; }}
+    .alert-red {{ border-color: {THEME["dbs_red"]}; background: {THEME["dbs_red_light"]}; color: #7f1d1d; }}
+    .alert-amber {{ border-color: #f59e0b; background: #fffbeb; color: #78350f; }}
     .brief-card {{
-        background: {THEME["surface"]};
-        border: 1px solid {THEME["border"]};
-        border-left: 5px solid {THEME["dbs_red"]};
-        border-radius: 8px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: {THEME["shadow"]};
-        height: 100%;
+        background: {THEME["surface"]}; border: 1px solid {THEME["border"]};
+        border-left: 5px solid {THEME["dbs_red"]}; border-radius: 8px;
+        padding: 1.25rem; margin-bottom: 1rem; box-shadow: {THEME["shadow"]}; height: 100%;
     }}
     .brief-card .label {{
-        color: {THEME["dbs_red"]};
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
+        color: {THEME["dbs_red"]}; font-size: 0.7rem; text-transform: uppercase;
+        letter-spacing: 0.08em; margin-bottom: 0.5rem; font-weight: 700;
     }}
-    .brief-card h4 {{
-        margin: 0 0 0.5rem;
-        font-size: 1rem;
-        font-weight: 700;
-        color: {THEME["black"]};
-    }}
-    .brief-card p {{
-        margin: 0;
-        color: {THEME["slate"]};
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }}
-    hr {{
-        margin: 2rem 0 !important;
-        border: 0;
-        border-top: 1px solid {THEME["border"]};
-    }}
+    .brief-card h4 {{ margin: 0 0 0.5rem; font-size: 1rem; font-weight: 700; color: {THEME["black"]}; }}
+    .brief-card p {{ margin: 0; color: {THEME["slate"]}; font-size: 0.875rem; line-height: 1.5; }}
+    hr {{ margin: 2rem 0 !important; border: 0; border-top: 1px solid {THEME["border"]}; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -258,61 +161,29 @@ def fmt_billions(value, decimals=1):
 
 def alert_html(level: str, text: str) -> str:
     css = {"green": "alert-green", "red": "alert-red", "amber": "alert-amber"}
-    return (
-        f'<div class="alert-box {css.get(level, "alert-amber")}">'
-        f"{text}</div>"
-    )
+    return f'<div class="alert-box {css.get(level, "alert-amber")}">{text}</div>'
 
 
 def apply_chart_theme(fig, height=None):
-    # Core layout styling
     fig.update_layout(
-        paper_bgcolor="white",
-        plot_bgcolor="white",
+        paper_bgcolor="white", plot_bgcolor="white",
         font=dict(family="'Inter', sans-serif", color=THEME["slate"]),
-        title=dict(
-            x=0, 
-            xanchor="left", 
-            font=dict(size=16, color=THEME["black"], weight="bold")
-        ),
+        title=dict(x=0, xanchor="left", font=dict(size=16, color=THEME["black"])),
         margin=dict(t=60, b=60, l=60, r=40),
-        legend=dict(
-            bgcolor="rgba(255,255,255,0.9)", 
-            bordercolor=THEME["border"],
-            borderwidth=1, 
-            font=dict(size=11),
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            x=0
-        ),
-        hoverlabel=dict(
-            bgcolor="white", 
-            bordercolor=THEME["border"],
-            font=dict(family="'Inter', sans-serif", color=THEME["black"])
-        ),
+        legend=dict(bgcolor="rgba(255,255,255,0.9)", bordercolor=THEME["border"],
+                    borderwidth=1, font=dict(size=11), orientation="h",
+                    yanchor="bottom", y=1.02, x=0),
+        hoverlabel=dict(bgcolor="white", bordercolor=THEME["border"],
+                        font=dict(family="'Inter', sans-serif", color=THEME["black"])),
     )
     if height is not None:
         fig.update_layout(height=height)
-    
-    # Axis styling
-    fig.update_xaxes(
-        showgrid=False, 
-        zeroline=False, 
-        linecolor=THEME["border"],
-        showline=True, 
-        tickfont=dict(size=11),
-        title_font=dict(size=12, color=THEME["slate"])
-    )
-    fig.update_yaxes(
-        showgrid=True, 
-        gridcolor=THEME["grid"], 
-        zeroline=False,
-        linecolor=THEME["border"], 
-        showline=True, 
-        tickfont=dict(size=11),
-        title_font=dict(size=12, color=THEME["slate"])
-    )
+    fig.update_xaxes(showgrid=False, zeroline=False, linecolor=THEME["border"],
+                     showline=True, tickfont=dict(size=11),
+                     title_font=dict(size=12, color=THEME["slate"]))
+    fig.update_yaxes(showgrid=True, gridcolor=THEME["grid"], zeroline=False,
+                     linecolor=THEME["border"], showline=True, tickfont=dict(size=11),
+                     title_font=dict(size=12, color=THEME["slate"]))
     return fig
 
 
@@ -344,7 +215,6 @@ def one_year_return(hist: pd.DataFrame):
 
 
 def _find_col(df: pd.DataFrame, keywords: list):
-    """Return first column whose string representation contains any keyword (case-insensitive)."""
     for kw in keywords:
         for c in df.columns:
             if kw.lower() in str(c).lower():
@@ -355,56 +225,75 @@ def _find_col(df: pd.DataFrame, keywords: list):
 # ─────────────────────────────────────────────────────────────────────────────
 # DATA LOADERS
 # ─────────────────────────────────────────────────────────────────────────────
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=7200, show_spinner=False)
 def load_stock_history() -> dict:
+    """
+    Uses yf.download() instead of t.history() — different Yahoo endpoint,
+    less aggressively rate-limited on shared cloud IPs.
+    Adds 2s sleep between tickers to avoid bursting.
+    """
+    yf.set_tz_cache_location("/tmp")
     out = {}
     for name, ticker in TICKERS.items():
         try:
-            t = yf.Ticker(ticker)
-            # Fetch history with explicit period to avoid API defaults
-            df = t.history(period="5y")
+            time.sleep(2)
+            df = yf.download(
+                ticker,
+                period="5y",
+                progress=False,
+                auto_adjust=True,
+                timeout=30,
+            )
             if df.empty:
-                # Fallback: try different period if 5y is too large/rate-limited
-                df = t.history(period="2y")
-            
+                time.sleep(3)
+                df = yf.download(ticker, period="2y", progress=False,
+                                 auto_adjust=True, timeout=30)
             if not df.empty:
-                df.index = df.index.tz_localize(None)
+                # yf.download with single ticker may return MultiIndex columns
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                df.index = pd.to_datetime(df.index).tz_localize(None)
                 if "Close" in df.columns:
                     df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
                     df = df.dropna(subset=["Close"])
                 out[name] = df
             else:
                 out[name] = pd.DataFrame()
-        except Exception as e:
-            st.error(f"Error loading stock data for {name}: {e}")
+        except Exception:
             out[name] = pd.DataFrame()
     return out
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=7200, show_spinner=False)
 def load_financials() -> dict:
+    """Loads financials with sleep between tickers to avoid rate limiting."""
+    yf.set_tz_cache_location("/tmp")
     data = {}
     for name, ticker in TICKERS.items():
         try:
-            t = yf.Ticker(ticker)
-            # Financials and Balance Sheet are often the most rate-limited
-            fin = t.financials.T.copy()
-            if not fin.empty:
+            time.sleep(3)
+            t   = yf.Ticker(ticker)
+            fin = t.financials
+            if fin is not None and not fin.empty:
+                fin = fin.T.copy()
                 fin.index = pd.to_datetime(fin.index).year
-            
-            bs = t.balance_sheet.T.copy()
-            if not bs.empty:
+            else:
+                fin = pd.DataFrame()
+
+            bs = t.balance_sheet
+            if bs is not None and not bs.empty:
+                bs = bs.T.copy()
                 bs.index = pd.to_datetime(bs.index).year
-            
-            info = t.info if t.info else {}
-            
-            # Additional check: if info is empty, try to get some basic stats
-            if not info:
-                info = {"symbol": ticker, "shortName": name}
+            else:
+                bs = pd.DataFrame()
+
+            try:
+                info = t.info or {}
+            except Exception:
+                info = {}
 
             data[name] = {"income": fin, "balance": bs, "info": info}
         except Exception:
-            # Silence the error to prevent UI clutter, but return empty structures
             data[name] = {"income": pd.DataFrame(), "balance": pd.DataFrame(), "info": {}}
     return data
 
@@ -437,7 +326,7 @@ def load_sgx() -> pd.DataFrame:
 # ─────────────────────────────────────────────────────────────────────────────
 # LOAD ALL DATA
 # ─────────────────────────────────────────────────────────────────────────────
-with st.spinner("Loading data…"):
+with st.spinner("Loading data — this may take up to 30 seconds on first load…"):
     stock_hist = load_stock_history()
     financials = load_financials()
     hr_df      = load_hr()
@@ -452,7 +341,7 @@ dbs_inc  = financials["DBS"]["income"]
 # HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown(
-    f"""
+    """
     <div class="dashboard-hero">
         <div class="eyebrow">DBS Bank Internal Dashboard</div>
         <h1>Strategic and HR Analytics Dashboard</h1>
@@ -460,6 +349,20 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# Refresh button
+if st.button("🔄 Refresh Live Data"):
+    st.cache_data.clear()
+    st.rerun()
+
+# Warn if live market data failed
+live_data_missing = not dbs_info or not dbs_info.get("marketCap")
+if live_data_missing:
+    st.warning(
+        "Live market data is temporarily unavailable — Yahoo Finance rate-limits "
+        "shared cloud IPs. Click **🔄 Refresh Live Data** above to retry, "
+        "or wait a few minutes and refresh the page."
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -616,8 +519,7 @@ with tab0:
             if fy:
                 delta = fv[-1] - clean[-1]
                 watch_rows.append({
-                    "Metric": metric_label,
-                    "Latest": fmt_billions(clean[-1]),
+                    "Metric": metric_label, "Latest": fmt_billions(clean[-1]),
                     "3Y Outlook": fmt_billions(fv[-1]),
                     "Direction": "Improving" if delta > 0.2 else "Stable" if abs(delta) <= 0.2 else "Weakening",
                     "Management use": rationale,
@@ -638,7 +540,9 @@ with tab0:
         if not fy:
             continue
         delta = fv[-1] - vals[-1]
-        direction = "Stable" if abs(delta) <= stable_band else ("Improving" if (better_when == "higher" and delta > 0) or (better_when == "lower" and delta < 0) else "Weakening")
+        direction = "Stable" if abs(delta) <= stable_band else (
+            "Improving" if (better_when == "higher" and delta > 0) or (better_when == "lower" and delta < 0) else "Weakening"
+        )
         watch_rows.append({
             "Metric": label, "Latest": formatter(vals[-1]),
             "3Y Outlook": formatter(fv[-1]), "Direction": direction,
@@ -667,6 +571,9 @@ with tab1:
     c3.metric("P/B Ratio",          f"{pb:.2f}×"     if pb  else "N/A")
     c4.metric("Dividend Yield",     f"{dy*100:.2f}%" if dy  else "N/A")
     c5.metric("Reported Headcount", f"{emp:,}"       if emp else "N/A")
+
+    if live_data_missing:
+        st.info("Live market KPIs will appear here once rate limit clears. Use the Refresh button at the top.")
 
     st.markdown("#### Competitor Snapshot - FY2024")
     col_l, col_r = st.columns([3, 2])
@@ -710,12 +617,11 @@ with tab1:
 with tab2:
     st.subheader("Financial Performance")
 
-    # ── Relative stock performance ────────────────────────────────────────────
     st.markdown("#### Relative Stock Price Performance - 5 Years (Indexed to 100)")
-
     fig_px = go.Figure()
+    any_stock_data = False
     for bank, hist in stock_hist.items():
-        if hist.empty:
+        if hist.empty or "Close" not in hist.columns:
             continue
         close = pd.to_numeric(hist["Close"], errors="coerce").dropna()
         if close.empty or close.iloc[0] == 0:
@@ -725,17 +631,16 @@ with tab2:
             x=idx.index, y=idx.values.tolist(),
             name=bank, line=dict(color=COLORS[bank], width=2),
         ))
-    fig_px.add_hline(y=100, line_dash="dash", line_color=THEME["border"], opacity=0.9)
-    apply_chart_theme(fig_px, height=380)
-    fig_px.update_layout(
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        xaxis_title="Date",
-        yaxis_title="Indexed Price (Base = 100)",
-        title=""
-    )
-    st.plotly_chart(fig_px, width='stretch')
+        any_stock_data = True
 
-    # ── Revenue & Net Income ──────────────────────────────────────────────────
+    if any_stock_data:
+        fig_px.add_hline(y=100, line_dash="dash", line_color=THEME["border"], opacity=0.9)
+        apply_chart_theme(fig_px, height=380)
+        fig_px.update_layout(xaxis_title="Date", yaxis_title="Indexed Price (Base = 100)", title="")
+        st.plotly_chart(fig_px, width='stretch')
+    else:
+        st.info("Stock price data is temporarily unavailable due to rate limiting. Click **🔄 Refresh Live Data** at the top to retry.")
+
     st.markdown("#### DBS Annual Revenue & Net Income - with 3-Year Linear Forecast")
     if not dbs_inc.empty:
         rev_col = _find_col(dbs_inc, ["Total Revenue", "revenue", "Revenue"])
@@ -744,7 +649,7 @@ with tab2:
 
         fig_fin = make_subplots(rows=1, cols=2,
                                 subplot_titles=("Total Revenue (SGD B)", "Net Income (SGD B)"))
-
+        any_fin = False
         for col_name, col_idx in [(rev_col, 1), (ni_col, 2)]:
             if col_name is None:
                 continue
@@ -755,17 +660,15 @@ with tab2:
                     vals.append(float(v) / 1e9 if pd.notna(v) else np.nan)
                 except (KeyError, TypeError, ValueError):
                     vals.append(np.nan)
-
             clean_vals = [v for v in vals if not np.isnan(v)]
             if not clean_vals:
                 continue
-
+            any_fin = True
             label = "Revenue" if col_idx == 1 else "Net Income"
             fig_fin.add_trace(go.Scatter(
                 x=years, y=vals, name=f"{label} Actual",
                 line=dict(color=COLORS["DBS"], width=2), mode="lines+markers",
             ), row=1, col=col_idx)
-
             fy, fv = linear_forecast(years, vals, 3)
             if fy:
                 fig_fin.add_trace(go.Scatter(
@@ -774,20 +677,17 @@ with tab2:
                     mode="lines+markers", marker=dict(symbol="circle-open"),
                 ), row=1, col=col_idx)
 
-        apply_chart_theme(fig_fin, height=400)
-        fig_fin.update_layout(
-            legend=dict(orientation="h", y=-0.2),
-            title=""
-        )
-        fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=1)
-        fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=2)
-        fig_fin.update_xaxes(title_text="Fiscal Year", row=1, col=1)
-        fig_fin.update_xaxes(title_text="Fiscal Year", row=1, col=2)
-        st.plotly_chart(fig_fin, width='stretch')
+        if any_fin:
+            apply_chart_theme(fig_fin, height=400)
+            fig_fin.update_layout(legend=dict(orientation="h", y=-0.2), title="")
+            fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=1)
+            fig_fin.update_yaxes(title_text="SGD Billion", row=1, col=2)
+            st.plotly_chart(fig_fin, width='stretch')
+        else:
+            st.info("Income statement data unavailable. Click **🔄 Refresh Live Data** to retry.")
     else:
-        st.info("Annual income statement data could not be retrieved from yfinance for D05.SI. Try refreshing.")
+        st.info("Income statement data unavailable. Click **🔄 Refresh Live Data** to retry.")
 
-    # ── Banking KPIs ──────────────────────────────────────────────────────────
     st.markdown("#### Key Banking Ratios - DBS vs OCBC vs UOB (FY2024)")
     if not sgx_df.empty:
         kpis = [
@@ -821,7 +721,6 @@ with tab3:
 
     hr = hr_df.copy()
 
-    # ── Headcount ─────────────────────────────────────────────────────────────
     st.markdown("### Workforce Size and Growth")
     col_l, col_r = st.columns(2)
 
@@ -853,7 +752,6 @@ with tab3:
         apply_chart_theme(fig2, height=340)
         st.plotly_chart(fig2, width='stretch')
 
-    # ── Attrition ─────────────────────────────────────────────────────────────
     st.markdown("### Voluntary Attrition")
     att   = hr.dropna(subset=["voluntary_attrition_pct"])
     ayrs  = att["year"].tolist()
@@ -879,7 +777,6 @@ with tab3:
     st.metric("Latest Voluntary Attrition", f"{latest_att}%",
               delta=f"{latest_att - prev_att:+.1f}pp vs prior year", delta_color="inverse")
 
-    # ── Training ──────────────────────────────────────────────────────────────
     st.markdown("### Training and Development")
     tr = hr.dropna(subset=["training_hrs_per_employee"])
     fig = px.bar(tr, x="year", y="training_hrs_per_employee",
@@ -890,7 +787,6 @@ with tab3:
     apply_chart_theme(fig, height=320)
     st.plotly_chart(fig, width='stretch')
 
-    # ── Engagement ────────────────────────────────────────────────────────────
     st.markdown("### Employee Engagement")
     eng   = hr.dropna(subset=["engagement_score_pct"])
     eyrs  = eng["year"].tolist()
@@ -913,7 +809,6 @@ with tab3:
     apply_chart_theme(fig, height=360)
     st.plotly_chart(fig, width='stretch')
 
-    # ── Gender Diversity ──────────────────────────────────────────────────────
     st.markdown("### Gender Diversity")
     col_l, col_r = st.columns(2)
 
@@ -938,7 +833,6 @@ with tab3:
         apply_chart_theme(fig, height=320)
         st.plotly_chart(fig, width='stretch')
 
-    # ── LAMP Alerts ───────────────────────────────────────────────────────────
     st.markdown("### LAMP Process - Automated Decision Alerts")
     latest_hr = hr.sort_values("year").iloc[-1]
     att_val   = latest_hr.get("voluntary_attrition_pct")
@@ -959,7 +853,6 @@ with tab3:
     for h in alerts:
         st.markdown(h, unsafe_allow_html=True)
 
-    # ── Attrition Cost Estimator ───────────────────────────────────────────────
     st.markdown("#### HR-Finance Linkage: Attrition Cost Estimator")
     col_l, col_r = st.columns(2)
 
@@ -1021,13 +914,9 @@ with tab4:
                          color="bank", color_discrete_map=COLORS, text="recommend_pct")
             fig.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
             apply_chart_theme(fig, height=230)
-            fig.update_layout(
-                showlegend=False,
-                yaxis_range=[0, 100],
-                yaxis_title="Percent (%)",
-                xaxis_title="Bank",
-                title="Would Recommend to a Friend(%)"
-            )
+            fig.update_layout(showlegend=False, yaxis_range=[0, 100],
+                              yaxis_title="Percent (%)", xaxis_title="Bank",
+                              title="Would Recommend to a Friend (%)")
             st.plotly_chart(fig, width='stretch')
 
             st.markdown("**Ratings Summary**")
@@ -1121,10 +1010,6 @@ with tab5:
 # - Glassdoor: employer sentiment ratings
 # - Ministry of Manpower: Singapore labour turnover statistics
 # Analytical Frameworks: LAMP (Boudreau & Ramstad, 2007) · PESTLE · Porter's Five Forces (1979) · HR Value Chain
-
-# --- Tab 0: Executive Diagnosis ---
-# This page translates the brief into a management view: what is happening, why it matters, and which signals require action.
-# Forecast watchlist uses simple linear trend projections. It is intended as an early-warning tool, not as a formal forecast model.
 
 # --- Tab 3: HR Analytics ---
 # LAMP Framework (Boudreau & Ramstad, 2007): Logic, Analytics, Measures, Process.
