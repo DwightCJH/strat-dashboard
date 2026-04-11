@@ -937,10 +937,15 @@ with tab4:
         apply_chart_theme(fig, height=400)
         st.plotly_chart(fig, width='stretch')
 
-    st.markdown("#### DBS Attrition vs Singapore Financial Sector (MOM)")
+    st.markdown("#### DBS Attrition vs Singapore Financial Sector")
     att_data = hr_df.dropna(subset=["voluntary_attrition_pct"])[["year", "voluntary_attrition_pct"]].copy()
     mom_data = pd.DataFrame(list(MOM_RESIGNATION.items()), columns=["year", "mom_resignation_rate"])
-    merged   = pd.merge(att_data, mom_data, on="year", how="inner")
+    
+    # Convert year to string for consistent merging and plotting
+    att_data["year"] = att_data["year"].astype(str)
+    mom_data["year"] = mom_data["year"].astype(str)
+    
+    merged = pd.merge(att_data, mom_data, on="year", how="inner")
 
     if not merged.empty:
         fig = go.Figure()
@@ -948,11 +953,12 @@ with tab4:
                                  name="DBS Voluntary Attrition",
                                  line=dict(color=COLORS["DBS"], width=2.5), mode="lines+markers"))
         fig.add_trace(go.Scatter(x=merged["year"], y=merged["mom_resignation_rate"],
-                                 name="MOM - Financial & Insurance Sector Avg",
+                                 name="Financial & Insurance Sector Avg",
                                  line=dict(color=THEME["charcoal"], width=2, dash="dash"),
                                  mode="lines+markers"))
         fig.update_layout(title="Voluntary Attrition: DBS vs Singapore Financial Sector (%)",
                           yaxis_title="Rate (%)", legend=dict(orientation="h", y=1.08))
+        fig.update_xaxes(type="category")
         apply_chart_theme(fig, height=380)
         st.plotly_chart(fig, width='stretch')
 
