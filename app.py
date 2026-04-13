@@ -126,6 +126,52 @@ st.markdown(
     .brief-card h4 {{ margin: 0 0 0.5rem; font-size: 1rem; font-weight: 700; color: {THEME["black"]}; }}
     .brief-card p {{ margin: 0; color: {THEME["slate"]}; font-size: 0.875rem; line-height: 1.5; }}
     hr {{ margin: 2rem 0 !important; border: 0; border-top: 1px solid {THEME["border"]}; }}
+
+    /* BUTTON CONSISTENCY */
+    div.stButton > button,
+    div.stDownloadButton > button {{
+        background-color: {THEME["surface"]};
+        color: {THEME["black"]} !important;
+        border: 1px solid {THEME["border"]};
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        width: auto;
+    }}
+    div.stButton > button:hover,
+    div.stDownloadButton > button:hover {{
+        border-color: {THEME["dbs_red"]};
+        color: {THEME["dbs_red"]} !important;
+        background-color: {THEME["surface_alt"]};
+        box-shadow: {THEME["shadow"]};
+    }}
+    div.stButton > button:active,
+    div.stDownloadButton > button:active {{
+        background-color: {THEME["dbs_red"]};
+        color: #ffffff !important;
+    }}
+
+    /* INPUT & WIDGET CONSISTENCY FOR DARK MODE */
+    div[data-testid="stSlider"] [data-testid="stTickBarMin"],
+    div[data-testid="stSlider"] [data-testid="stTickBarMax"],
+    div[data-testid="stSlider"] [data-testid="stWidgetLabel"] p {{
+        color: {THEME["black"]} !important;
+    }}
+    div[data-baseweb="select"] > div {{
+        background-color: {THEME["surface"]} !important;
+        color: {THEME["black"]} !important;
+    }}
+    div[data-testid="stTextInput"] input, 
+    div[data-testid="stNumberInput"] input {{
+        color: {THEME["black"]} !important;
+        background-color: {THEME["surface"]} !important;
+    }}
+    
+    /* FIX FOR OVERLAPPING MODES */
+    .stApp {{ background-color: {THEME["surface_alt"]} !important; color: {THEME["black"]} !important; }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+    [data-testid="stSidebar"] {{ background-color: {THEME["surface"]}; }}
     </style>
     """,
     unsafe_allow_html=True,
