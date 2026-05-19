@@ -405,9 +405,7 @@ if st.button("🔄 Refresh Live Data"):
 live_data_missing = not dbs_info or not dbs_info.get("marketCap")
 if live_data_missing:
     st.warning(
-        "Live market data is temporarily unavailable — Yahoo Finance rate-limits "
-        "shared cloud IPs. Click **🔄 Refresh Live Data** above to retry, "
-        "or wait a few minutes and refresh the page."
+        "Live market data is temporarily unavailable."
     )
 
 
